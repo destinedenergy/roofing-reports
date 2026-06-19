@@ -1,0 +1,181 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>StormIQ - Reporte Solar DFW</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1117;color:#e1e4e8;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{background:#161b22;border-bottom:1px solid #30363d;padding:10px 18px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+header h1{font-size:17px;font-weight:700;color:#58a6ff}
+.meta{font-size:12px;color:#8b949e}
+.badge{background:#1a4228;color:#3fb950;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700}
+.badge.warn{background:#3a2800;color:#e3b341}
+.alert-banner{background:#3a2800;color:#f0b429;border-bottom:1px solid #5c3d00;padding:9px 18px;font-size:12.5px;line-height:1.5;flex-shrink:0}
+.alert-banner b{color:#ffcb47}
+.accessbar{display:flex;gap:8px;flex-wrap:wrap;background:#0d1117;border-bottom:1px solid #30363d;padding:8px 18px;flex-shrink:0}
+.accessbar.bottom{border-bottom:none;border-top:1px solid #30363d}
+.access-link{background:#1f6feb;color:#fff;text-decoration:none;font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px}
+.access-link:hover{background:#388bfd}
+.meteo{background:#161b22;border-bottom:1px solid #30363d;padding:9px 18px;font-size:12px;color:#8b949e;line-height:1.6;flex-shrink:0}
+.meteo b{color:#c9d1d9}
+.meteo ul{margin:4px 0 0 18px}
+.layout{display:flex;flex:1;overflow:hidden}
+#sidebar{width:320px;overflow-y:ï¿½to;background:#161b22;border-right:1px solid #30363d;display:flex;flex-direction:column}
+.sb-head{padding:10px 14px;background:#21262d;border-bottom:1px solid #30363d;font-size:11px;font-weight:700;color:#79c0ff;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.cards{flex:1;overflow-y:auto}
+.card{padding:12px 14px;border-bottom:1px solid #21262d;cursor:pointer;transition:background .15s;border-left:3px solid transparent}
+.card:hover{background:#1c2128}
+.card.confirmed{border-left-color:#3fb950}
+.card.possible{border-left-color:#e3b341}
+.card.none{border-left-color:#30363d}
+.card-addr{font-size:13px;font-weight:600;color:#e1e4e8;margin-bottom:3px}
+.card-city{font-size:11px;color:#8b949e;margin-bottom:6px}
+.card-score{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.bar-bg{flex:1;height:4px;background:#30363d;border-radius:2px;overflow:hidden}
+.bar{height:100%;border-radius:2px}
+.pct{font-size:11px;font-weight:700;min-width:28px;text-align:right}
+.tag{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;display:inline-block}
+.tag.confirmed{background:#1a4228;color:#3fb950}
+.tag.possible{background:#3a2800;color:#e3b341}
+.tag.none{background:#21262d;color:#8b949e}
+.thumb{width:100%;border-radius:6px;margin-top:8px;display:block;max-height:120px;object-fit:cover;border:1px solid #30363d}
+#map{flex:1}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;max-width:700px;width:92%;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:15px;color:#79c0ff;margin-bottom:3px}
+.modal .sub{font-size:12px;color:#8b949e;margin-bottom:14px}
+.modal img{width:100%;border-radius:8px;margin-bottom:12px;border:1px solid #30363d;display:block}
+.modal .reason{font-size:12px;color:#8b949e;line-height:1.6;background:#0d1117;padding:10px 14px;border-radius:8px;border-left:3px solid #30363d}
+.modal-close{float:right;background:none;border:none;color:#8b949e;cursor:pointer;font-size:22px;line-height:1;padding:0 0 4px 8px}
+.mapboxgl-popup-content{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 14px;color:#e1e4e8;font-size:12px;min-width:200px}
+.mapboxgl-popup-content strong{color:#79c0ff;display:block;margin-bottom:4px}
+.mapboxgl-popup-close-button{color:#8b949e}
+.popup-btn{background:#1f6feb;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;margin-top:8px;display:inline-block}
+.popup-btn:hover{background:#388bfd}
+</style>
+</head>
+<body>
+<header>
+  <h1>StormIQ - Reporte Solar DFW</h1>
+  <span class="badge">0 con solar</span>
+  <span class="badge warn">1 sin solar</span>
+  <span class="meta">1 escaneadas - viernes, 19 de junio de 2026 - Modo PROSPECTING (sin granizo activo)</span>
+</header>
+
+
+
+<div class="accessbar">
+  <a class="access-link" href="file:///C:/Users/desti/.openclaw/workspace/projects/roofing/output/report.html">Reporte visual (Mapbox)</a>
+  <a class="access-link" href="https://drive.google.com/drive/folders/1cnt20OyN6DRKzRzG3rzaE2_ewSZnXP9D">Reporte solar (Drive)</a>
+  <a class="access-link" href="https://destined-energy.monday.com/boards/18417565562">Monday board</a>
+</div>
+
+<div class="meteo">
+ <div><b>Zonas evaluadas:</b> Collin County TX â€” Frisco, McKinney, Allen, Plano - Denton County TX â€” Flower Mound, Highland Village, Lewisville, Lantana - Tarrant County TX â€” Southlake, Keller, Colleyville, Grapevine, Westlake - Rockwall County TX â€” Rockwall, Rowlett, Heath, McLendon-Chisholm - Dallas County TX â€” Richardson, Garland, Rowlett, Sachse</div>
+  <div><b>Sin granizo en 15 dias - referencia historica de las zonas escaneadas:</b><ul><li><b>14 de mayo de 2026</b> - Collin County TX â€” Frisco, McKinney, Allen, Plano - granizo <b>1.75"</b></li><li><b>7 de abril de 2026</b> - Denton County TX â€” Flower Mound, Highland Village, Lewisville, Lantana - granizo <b>1.5"</b></li><li><b>19 de octubre de 2025</b> - Tarrant County TX â€” Southlake, Keller, Colleyville, Grapevine, Westlake - granizo <b>2"</b></li><li><b>5 de mayo de 2025</b> - Dallas County TX â€” Richardson, Garland, Rowlett, Sachse - granizo <b>1.25"</b></li><li><b>27 de abril de 2024</b> - Rockwall County TX â€” Rockwall, Rowlett, Heath, McLendon-Chisholm - granizo <b>1.5"</b></li></ul></div>
+</div>
+
+<div class="layout">
+  <div id="sidebar">
+    <div class="sb-head">Solar confirmado (0)</div>
+    <div class="cards">
+<div style="padding:18px;color:#8b949e;font-size:13px;">Sin propiedades solares en este run.</div>
+    </div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<div class="accessbar bottom">
+  <a class="access-link" href="file:///C:/Users/desti/.openclaw/workspace/projects/roofing/output/report.html">Reporte visual (Mapbox)</a>
+  <a class="access-link" href="https://drive.google.com/drive/folders/1cnt20OyN6DRKzRzG3rzaE2_ewSZnXP9D">Reporte solar (Drive)</a>
+  <a class="access-link" href="https://destined-energy.monday.com/boards/18417565562">Monday board</a>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">X</button>
+    <h3 id="m-addr"></h3>
+    <div class="sub" id="m-sub"></div>
+    <img id="m-img" src="" alt="Imagen satelital" onerror="this.style.display='none'">
+    <div class="reason" id="m-reason"></div>
+  </div>
+</div>
+
+<script>
+const TOKEN = "REDACTED_MAPBOX_TOKEN";
+const MODAL_DATA = {"OSM-356821469":{"property":{"propertyId":"OSM-356821469","address":"9280 Mimosa Road","city":"Frisco","state":"TX","zip":"75034","county":"Frisco","lat":33.1529045,"lon":-96.8182881,"propertyType":"residential","source":"OVERPASS","fetchedAt":"2026-06-19T22:03:24.675Z"},"hasSolar":false,"confidence":"NONE","confidenceScore":10,"evidenceSource":"GEMINI_VISION","streetViewImageUrl":"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/-96.8182881,33.1529045,20/640x640?access_token=REDACTED_MAPBOX_TOKEN","geminiReason":"The image shows a large, flat-roofed building. There are no visible features on the roof that resemble solar panels, such as a distinct grid pattern, sheen, or crisp rectangular arrays. The dark areas on the roof are consistent with shadows cast by trees or possibly uneven roofing material, but they lack the characteristic sharp edges and reflectivity of solar panels.","detectedAt":"2026-06-19T22:06:15.231Z","_imgUrl":"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/-96.8182881,33.1529045,20/640x640?access_token=REDACTED_MAPBOX_TOKEN"}};
+
+mapboxgl.accessToken = TOKEN;
+const map = new mapboxgl.Map({
+  container:'map',
+  style:'mapbox://styles/mapbox/satellite-streets-v12',
+  center:[-97.0553,33.0942],
+  zoom:9
+});
+
+const GJ = {type:'FeatureCollection',features:[{"type":"Feature","geometry":{"type":"Point","coordinates":[-96.8182881,33.1529045]},"properties":{"id":"OSM-356821469","address":"9280 Mimosa Road","city":"Frisco","zip":"75034","confidence":"NONE","score":10,"hasSolar":false,"reason":"The image shows a large, flat-roofed building. There are no visible features on the roof that resemble solar panels, such as a distinct grid pattern, sheen, or crisp rectangular arrays. The dark areas on the roof are consistent with shadows cast by trees or possibly uneven roofing material, but they lack the characteristic sharp edges and reflectivity of solar panels.","imageUrl":"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/-96.8182881,33.1529045,20/640x640?access_token=REDACTED_MAPBOX_TOKEN","color":"#8b949e"}}]};
+
+map.on('load',()=>{
+  map.addSource('props',{type:'geojson',data:GJ});
+  map.addLayer({id:'props-glow',type:'circle',source:'props',paint:{'circle-radius':11,'circle-color':'#000','circle-opacity':.2,'circle-blur':1}});
+  map.addLayer({id:'props',type:'circle',source:'props',paint:{
+    'circle-radius':7,
+    'circle-color':['get','color'],
+    'circle-opacity':.95,
+    'circle-stroke-width':2,
+    'circle-stroke-color':'#fff',
+    'circle-stroke-opacity':.7
+  }});
+
+  map.on('click','props',e=>{
+    const f=e.features[0].properties;
+    const coords=e.features[0].geometry.coordinates.slice();
+    const div=document.createElement('div');
+    div.innerHTML<'<strong>'+f.address+'</strong>'+f.city+', TX '+f.zip+'<br><span style="color:'+f.color(';font-weight:700">'+f.confidence+' - '+f.score+'%</span>';
+    if(f.imageUrl){
+      div.appendChild(document.createElement('br'));
+      const b=document.createElement('button');
+      b.className='popup-btn'; b.textContent='Ver foto satelital';
+      b.addEventListener('click',()=>showModal(f.id));
+      div.appendChild(b);
+    }
+    new mapboxgl.Popup({closeButton:true,maxWidth:'260px'})
+      .setLngLat(coords).setDOMContent(div).addTo(map);
+  });
+  map.on('mouseenter','props',()=>{map.getCanvas().style.cursor='pointer'});
+  map.on('mouseleave','props',()=>{map.getCanvas().style.cursor=''});
+
+  if (GJ.features.length > 0) {
+    const b = new mapboxgl.LngLatBounds();
+    GJ.features.forEach(f => b.extend(f.geometry.coordinates));
+    map.fitBounds(b, {padding:80, maxZoom:17, duration:0});
+  }
+
+  new mapboxgl.Marker({color:'#58a6ff'})
+    .setLngLat([-97.0553,33.0942])
+    .setPopup(new mapboxgl.Popup().setHTML('<strong>Centro</strong><br>Highland Village, TX'))
+    .addTo(map);
+});
+
+function showModal(id){
+  const r=MODAL_DATA[id];
+  if(!r)return;
+  document.getElementById('m-addr').textContent=r.property.address;
+  document.getElementById('m-sub').textContent=r.property.city+', TX '+r.property.zip+' - '+r.confidence+' ('+r.confidenceScore+'%)';
+  const img=document.getElementById('m-img');
+  img.src=r._imgUrl|'';
+  img.style.display=r._imgUrl?'block':'none';
+  document.getElementById('m-reason').textContent=r.geminiReason||'Sin analisis Gemini disponible.';
+  document.getElementById('modal').classList.add('open');
+  if(r.property.lat&&r.property.lon)map.flyTo({center:[r.property.lon,r.property.lat],zoom:18,duration:1200});
+}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+</script>
+</body>
+</html>
